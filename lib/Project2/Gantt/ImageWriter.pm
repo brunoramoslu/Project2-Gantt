@@ -19,31 +19,25 @@ package Project2::Gantt::ImageWriter;
 use Mojo::Base -base,-signatures;
 
 use Imager;
-use Project2::Gantt::DateUtils qw[:round :lookup];
+use Project2::Gantt::DateUtils qw[:round];
 use Project2::Gantt::Globals;
 use Project2::Gantt::GanttHeader;
 use Project2::Gantt::TimeSpan;
 use Project2::Gantt::SpanInfo;
 
-##########################################################################
-#
-#	Method:	new(%opts)
-#
-#	Purpose: Constructor. Takes as parameters the mode of drawing
-#		(hours, days, or months), the root Project::Gantt object,
-#		and the skin in use.
-#
-##########################################################################
+has root => undef;
+has mode => 'days';
+has skin => undef;
+has canvas => undef;
+
+use constant SPAN_INFO_WIDTH => 205;
+use constant HEADER_HEIGHT   => 40;
+use constant ROW_HEIGHT      => 20;
+
 sub new {
-	my $cls	= shift;
-	my %opts= @_;
-	if(not $opts{root}){
-		die "Must supply root node to ImageWriter!";
-	}
-	$opts{mode} = 'days' if not $opts{mode};
-	my $me 	= bless \%opts, $cls;
-	$me->_getCanvas();
-	return $me;
+	my $self = shift->SUPER::new(@_);
+	$self->_get_canvas();
+	return $self;
 }
 
 ##########################################################################
@@ -56,23 +50,27 @@ sub new {
 #		constitute the chart.
 #
 ##########################################################################
-sub _getCanvas {
-	my $me = shift;
-	my $skin = $me->{skin};
-	my ($height, $width) = (0,0);
-	$height = 40;
-	# add height for each row
-	$height += 20 for (1..$me->{root}->getNodeCount());
-	$width	= 205;
-	my $incr = $DAYSIZE;
-	$incr = $MONTHSIZE if($me->{mode} eq 'months');
-	# add width for each time unit
-	$width += $incr for (1..$me->{root}->timeSpan());
+sub _get_canvas($self) {
+	my $width  = SPAN_INFO_WIDTH;
+	my $height = HEADER_HEIGHT;
 
-	my $canvas = Imager->new(xsize=>$width,ysize=>$height);
-	$canvas->box(filled => 1, color => $skin->background);
-	#$canvas->Read('xc:'.$me->{skin}->background());
-	$me->{canvas} = $canvas;
+	print STDERR "_get_canvas getNodeCount=" . $self->root->getNodeCount(),"\n";
+
+	# add height for each row
+	$height += ROW_HEIGHT for (1..$self->root->getNodeCount());
+
+	my $incr = $DAYSIZE;
+	$incr = $MONTHSIZE if $self->mode eq 'months';
+
+	# add width for each time unit
+	$width += $incr for (1..$self->root->timeSpan());
+
+	my $canvas = Imager->new(xsize => $width, ysize => $height);
+	print STDERR "Size: " . $canvas->getwidth() . "x" . $canvas->getheight(),"\n";
+
+	$canvas->box(filled => 1, color => $self->skin->background);
+
+	$self->canvas($canvas);
 }
 
 ##########################################################################
@@ -84,18 +82,18 @@ sub _getCanvas {
 #		writes the image to a file.
 #
 ##########################################################################
-sub display {
-	my $me	= shift;
-	my $img	= shift;
-	my $hdr	= Project2::Gantt::GanttHeader->new(
-		canvas	=>	$me->{canvas},
-		skin	=>	$me->{skin},
-		root	=>	$me->{root});
-	$hdr->display($me->{mode});
+sub display($self, $image) {
+	my $header	= Project2::Gantt::GanttHeader->new(
+		canvas	=>	$self->canvas,
+		skin	=>	$self->skin,
+		root	=>	$self->root
+	);
+
+	$header->display($self->mode);
 
     # PW added parameters, required by new writeBars with recursive support
-    $me->writeBars($me->{'root'}, 40);  
-	$me->{canvas}->write(file=>$img) or die $me->{canvas}->errstr;
+    $self->writeBars($self->root, 40);
+	$self->canvas->write(file => $image) or die $self->canvas->errstr;
 }
 
 ##########################################################################
@@ -111,32 +109,31 @@ sub display {
 #           projects (more than 1 level deep)
 #
 ##########################################################################
-sub writeBars {
-	my $me		= shift;
-    my $project = shift;
-    my $height  = shift;
-	my $stDate	= $me->{root}->getStartDate();
+sub writeBars($self, $project, $height) {
+	my $stDate  = $self->root->getStartDate();
     my @tasks   = $project->getTasks();
     my @projs   = $project->getSubProjs();
 
 	# write tasks before sub-projects.. adjust height as we go
-	for my $tsk (@tasks,@projs){
+	for my $task (@tasks,@projs){
 		my $info= Project2::Gantt::SpanInfo->new(
-			canvas	=>	$me->{canvas},
-			skin	=>	$me->{skin},
-			task	=>	$tsk);
+			canvas	=>	$self->canvas,
+			skin	=>	$self->skin,
+			task	=>	$task
+		);
 		$info->display($height);
 		my $bar	= Project2::Gantt::TimeSpan->new(
-			canvas	=>	$me->{canvas},
-			skin	=>	$me->{skin},
-			task	=>	$tsk,
-			rootStr	=>	$stDate);
-		$bar->display($me->{mode},$height);
+			canvas	=>	$self->canvas,
+			skin	=>	$self->skin,
+			task	=>	$task,
+			rootStr	=>	$stDate
+		);
+		$bar->display($self->mode,$height);
 		$height	+= 20;
 
         # if the task is a sub-project then draw recursively
-		if($tsk->isa("Project2::Gantt")){
-            $me->writeBars ($tsk, $height);
+		if($task->isa("Project2::Gantt")){
+            $self->writeBars ($task, $height);
 		}
 	}
 }

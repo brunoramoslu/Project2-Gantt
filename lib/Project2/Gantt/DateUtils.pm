@@ -16,25 +16,25 @@
 #
 ##########################################################################
 package Project2::Gantt::DateUtils;
-use strict;
-use warnings;
+
+use Mojo::Base -strict,-signatures;
+
 use Exporter ();
 use vars qw[@EXPORT_OK %EXPORT_TAGS @ISA];
 
-@ISA	= qw[Exporter];
+@ISA = qw[Exporter];
 
-@EXPORT_OK = qw[hourBegin
-		hourEnd
-		dayBegin
-		dayEnd
-		monthBegin
-		monthEnd
-		getMonth 
-		getDay
-		monthsBetween
-		hoursBetween
-		daysBetween
-	];
+@EXPORT_OK = qw[
+	hourBegin
+	hourEnd
+	dayBegin
+	dayEnd
+	monthBegin
+	monthEnd
+	monthsBetween
+	hoursBetween
+	daysBetween
+];
 
 %EXPORT_TAGS = (
 	compare		=>	[qw(
@@ -48,9 +48,7 @@ use vars qw[@EXPORT_OK %EXPORT_TAGS @ISA];
 				dayBegin
 				monthEnd
 				monthBegin)],
-	lookup		=>	[qw(
-				getDay
-				getMonth)] );
+);
 
 ##########################################################################
 #
@@ -60,10 +58,7 @@ use vars qw[@EXPORT_OK %EXPORT_TAGS @ISA];
 #		This is inclusive of the rest of the months.
 #
 ##########################################################################
-sub monthsBetween {
-	my $date1 = shift;
-	my $date2 = shift;
-
+sub monthsBetween($date1, $date2) {
     # Peter Weatherdon Jan 25, 2005
     # Used new monthEarly and monthLate functions instead of monthBegin and 
     # monthEnd because Class::Date has some problems calculating date
@@ -84,9 +79,7 @@ sub monthsBetween {
 #		Class::Date objects.
 #
 ##########################################################################
-sub daysBetween {
-	my $date1 = shift;
-	my $date2 = shift;
+sub daysBetween($date1, $date2) {
 	$date1	= dayEnd($date1);
 	$date2	= dayBegin($date2);
 	my $rough = int(($date2-$date1)->days);
@@ -101,9 +94,7 @@ sub daysBetween {
 #		Class::Date objects.
 #
 ##########################################################################
-sub hoursBetween {
-	my $date1 = shift;
-	my $date2 = shift;
+sub hoursBetween($date1, $date2) {
 	$date1	= hourEnd($date1);
 	$date2	= hourBegin($date2);
 	my $rough = int(($date2-$date1)->hours);
@@ -118,8 +109,7 @@ sub hoursBetween {
 #		hour.
 #
 ##########################################################################
-sub hourBegin {
-	my $date = shift;
+sub hourBegin($date) {
 	print STDERR "#"x40,"\n";
 	print STDERR "hourBegin date=$date","\n";
 	$date	-= ($date->min() - 1)."m" if $date->min > 0;
@@ -136,8 +126,7 @@ sub hourBegin {
 #	Purpose: Returns the date object, reset to the end of the hour.
 #
 ##########################################################################
-sub hourEnd {
-	my $date = shift;
+sub hourEnd($date){
 	$date	+= (59 - $date->min)."m" if $date->min < 59;
 	$date	+= (59 - $date->sec)."s" if $date->sec < 59;
 	return $date;
@@ -151,8 +140,7 @@ sub hourEnd {
 #		day.
 #
 ##########################################################################
-sub dayBegin {
-	my $date = shift;
+sub dayBegin($date) {
 	$date	-= ($date->hour() - 1)."h" if $date->hour > 0;
 	$date	= hourBegin($date);
 	return $date;
@@ -165,8 +153,7 @@ sub dayBegin {
 #	Purpose: Returns the date object, reset to the end of the day.
 #
 ##########################################################################
-sub dayEnd {
-	my $date = shift;
+sub dayEnd($date) {
 	$date	+= (23 - $date->hour)."h" if $date->hour < 23;
 	$date	= hourEnd($date);
 	return $date;
@@ -183,8 +170,7 @@ sub dayEnd {
 #		used.
 #
 ##########################################################################
-sub monthBegin {
-	my $date= shift;
+sub monthBegin($date) {
 	$date	= $date->month_begin();
 	$date	= dayBegin($date);
 	return $date;
@@ -199,13 +185,11 @@ sub monthBegin {
 #		similar manner to the function above.
 #
 ##########################################################################
-sub monthEnd {
-	my $date= shift;
+sub monthEnd($date) {
 	$date	= $date->month_end();
 	$date	= dayEnd($date);
 	return $date;
 }
-
 
 ##########################################################################
 #
@@ -216,8 +200,7 @@ sub monthEnd {
 #   Purpose: Returns the date, reset to the 5th of the month. 
 #
 ##########################################################################
-sub monthEarly {
-    my $date = shift;
+sub monthEarly($date) {
     return Time::Piece->strptime($date->year . "-" . $date->month . "-" . "05");
 }
 
@@ -231,56 +214,8 @@ sub monthEarly {
 #   Purpose: Returns the date, reset to the 25th of the month. 
 #
 ##########################################################################
-sub monthLate {
-    my $date = shift;
+sub monthLate($date) {
     return Time::Piece->strptime($date->year . "-" . $date->month . "-" . "25");
-}
-
-##########################################################################
-#
-#	Function: getDay(date)
-#
-#	Purpose: Returns the string representation of the day of the week
-#		for the date passed in.
-#
-##########################################################################
-sub getDay {
-	my $day		= shift;
-	my @days;
-	$days[1]	= 'Sunday';
-	$days[2]	= 'Monday';
-	$days[3]	= 'Tuesday';
-	$days[4]	= 'Wednesday';
-	$days[5]	= 'Thursday';
-	$days[6]	= 'Friday';
-	$days[7]	= 'Saturday';
-	return $days[$day];
-}
-
-##########################################################################
-#
-#	Function: getMonth(date)
-#
-#	Purpose: Returns the string representation of the month for the
-#		date passed in.
-#
-##########################################################################
-sub getMonth {
-	my $month	= shift;
-	my @months;
-	$months[1]	= 'January';
-	$months[2]	= 'February';
-	$months[3]	= 'March';
-	$months[4]	= 'April';
-	$months[5]	= 'May';
-	$months[6]	= 'June';
-	$months[7]	= 'July';
-	$months[8]	= 'August';
-	$months[9]	= 'September';
-	$months[10]	= 'October';
-	$months[11]	= 'November';
-	$months[12]	= 'December';
-	return $months[$month];
 }
 
 1;

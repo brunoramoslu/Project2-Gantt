@@ -192,8 +192,9 @@ modify it under the same terms as Perl itself.
 =cut
  
 package Project2::Gantt;
-use strict;
-use warnings;
+
+use Mojo::Base -base,-signatures;
+
 use Project2::Gantt::Resource;
 use Project2::Gantt::Task;
 use Project2::Gantt::ImageWriter;
@@ -202,55 +203,67 @@ use Project2::Gantt::Skin;
 
 our $VERSION = '1.01';
 
+has root => undef;
+has skin => undef;
+has mode => 'days';
+has file => undef;
+has description => undef;
+
+has tasks => sub { [] };
+has tasks => sub { [] };
+has subprojs => sub { [] };
+has resources => sub { {} };
+has parent => 0;
+has subNodes => 0;
+has startDate => -1;
+has endDate => 0;
+has skin => sub { Project2::Gantt::Skin->new };
+
 #params:
 #name
-sub new {
-	my $class	= shift;
-	my %args	= @_;
-	if(not $args{description}){
-		die "Must provide description of project!";
-	}
-	if(not $args{file} and not $args{parent}){
-		die "Must provide filename for output!";
-	}
-	$args{mode}	= 'days' if not $args{mode};
-	$args{tasks}	= [];
-	$args{subprojs}	= [];
-	$args{resources}= {};
-	$args{parent}	= 0 if not defined $args{parent};
-	$args{subNodes}	= 0;
-	# startDate must be now because comparison against
-	# a value that's better will cause handleDates to
-	# still get called, resetting the startDate to 0, if
-	# startDate is allowed to stay 0
-	$args{startDate}= -1;
-	$args{endDate}	= 0;
-	$args{skin}	= $args{skin} || new Project2::Gantt::Skin();
-	my $me = bless \%args, $class;
-	return $me;
-}
+# sub new {
+# 	my $class	= shift;
+# 	my %args	= @_;
+# 	if(not $args{description}){
+# 		die "Must provide description of project!";
+# 	}
+# 	if(not $args{file} and not $args{parent}){
+# 		die "Must provide filename for output!";
+# 	}
+# 	$args{mode}	= 'days' if not $args{mode};
+# 	$args{tasks}	= [];
+# 	$args{subprojs}	= [];
+# 	$args{resources}= {};
+# 	$args{parent}	= 0 if not defined $args{parent};
+# 	$args{subNodes}	= 0;
+# 	# startDate must be now because comparison against
+# 	# a value that's better will cause handleDates to
+# 	# still get called, resetting the startDate to 0, if
+# 	# startDate is allowed to stay 0
+# 	$args{startDate}= -1;
+# 	$args{endDate}	= 0;
+# 	$args{skin}	= $args{skin} || new Project2::Gantt::Skin->new();
+# 	my $me = bless \%args, $class;
+# 	return $me;
+# }
 
-sub addResource {
-	my $me	= shift;
-	my %opts= @_;
-	my $res	= new Project2::Gantt::Resource(%opts);
-	$me->{resources}->{$opts{name}} = $res;
+sub addResource($self,%opts) {
+	my $res	= Project2::Gantt::Resource->new(%opts);
+	$self->resources->{$opts{name}} = $res;
 	return $res;
 }
 
-sub addTask {
-	my $me	= shift;
-	my %opts= @_;
+sub addTask($self,%opts) {
 	die "Must provide resource for task!" if not $opts{resource};
 	die "Must provide start date for task!" if not $opts{start};
 	die "Must provide end date for task!" if not $opts{end};
-	if(not $me->{parent}){
-		if(not $me->{resources}->{$opts{resource}->getName()}){
+	if(not $self->parent){
+		if(not $self->resources->{$opts{resource}->name}){
 			die "Mis-assignment of task resources!!";
 		}
 	}else{
-		if(not $me->{parent}->{resources}->{
-			$opts{resource}->getName()}){
+		if(not $self->parent->{resources}->{
+			$opts{resource}->name}){
 
 			#die "Mis-assignment of task resources!";
 		}
@@ -259,136 +272,120 @@ sub addTask {
 	$opts{end}	.= " 17:00:00" if $opts{end} !~ /\:/;
 	# handle addition to sub-project
 	my $tsk = Project2::Gantt::Task->new(%opts);
-	$tsk->parent($me);
+	$tsk->parent($self);
 	$tsk->addResource($opts{resource});
 	$tsk->_handleDates();
-	push @{$me->{tasks}}, $tsk;
-	$me->incrNodeCount();
+	push @{$self->tasks}, $tsk;
+	$self->incrNodeCount();
 }
 
 # allow resource to be assignmed for every sub-task
-sub addSubProject {
-	my $me	= shift;
-	my %opts= @_;
-	$opts{parent} = $me;
-	my $prj	= new Project2::Gantt(%opts);
-	push @{$me->{subprojs}}, $prj;
-	$me->incrNodeCount();
+sub addSubProject($self, %opts) {
+	use Data::Dumper;
+	say STDERR Dumper(\%opts);
+	$opts{parent} = $self;
+	say STDERR Dumper(\%opts);
+	my $prj	= Project2::Gantt->new(%opts);
+	push @{$self->subprojs}, $prj;
+	$self->incrNodeCount();
 	return $prj;
 }
 
-sub display {
-	my $me	= shift;
-	if($me->{parent}){
+sub display($self) {
+	if($self->parent){
 		die "Must not call display on sub-project!";
 	}
-	my $wtr = new Project2::Gantt::ImageWriter(
-		root	=>	$me,
-		skin	=>	$me->{skin},
-		mode	=>	$me->{mode});
-	$wtr->display($me->{file});
+	my $writer = Project2::Gantt::ImageWriter->new(
+		root	=>	$self,
+		skin	=>	$self->skin,
+		mode	=>	$self->mode);
+	$writer->display($self->file);
 }
 
-sub _display {
-	my $me		= shift;
-	my $start	= $me->{startDate};
-	my $end		= $me->{endDate};
-	if($me->{parent}){
+sub _display($self) {
+	my $start	= $self->startDate;
+	my $end		= $self->endDate;
+	if($self->parent){
 		# print container bar
-		print "SUBPROJECT: $me->{description}\n";
+		print "SUBPROJECT: $self->description\n";
 	}else{
 		# print header
-		print "MASTER PROJECT: $me->{description}\n";
+		print "MASTER PROJECT: $self->description\n";
 	}
 	print "RUNS FROM: $start to $end\n";
 
-	for my $tsk (@{$me->{tasks}}){
-		print "TASK: ".$tsk->getDescription()."\n";
-		print "TASK START: ".$tsk->getStartDate()."\n";
-		print "TASK END: ".$tsk->getEndDate()."\n";
+	for my $tsk (@{$self->tasks}){
+		print "TASK: ".$tsk->description."\n";
+		print "TASK START: ".$tsk->startDate."\n";
+		print "TASK END: ".$tsk->endDate."\n";
 	}
 
-	for my $sub (@{$me->{subprojs}}){
+	for my $sub (@{$self->subprojs}){
 		$sub->display();
 	}
 }
 
 sub getResources { 0 }
 
-sub getTasks {
-	my $me	= shift;
-	return @{$me->{tasks}};
+sub getTasks($self) {
+	return @{$self->tasks};
 }
 
-sub getSubProjs {
-	my $me	= shift;
-	return @{$me->{subprojs}};
+sub getSubProjs($self) {
+	return @{$self->subprojs};
 }
 
-sub _handleDates {
-	my $me	= shift;
-	my $prnt= $me->{parent};
-	return if not $prnt;
-	my $oStrt	= $prnt->getStartDate() || -1;
-	my $oEnd	= $prnt->getEndDate() || 0;
-	if(($oStrt > $me->{startDate}) or ($oStrt == -1)){
-		$prnt->getStartDate($me->{startDate});
+sub _handleDates($self) {
+	my $parent= $self->parent;
+	return if not $parent;
+	my $oStrt	= $parent->startDate || -1;
+	my $oEnd	= $parent->endDate || 0;
+	if(($oStrt > $self->startDate) or ($oStrt == -1)){
+		$parent->getStartDate($self->startDate);
 	}
 
     # Peter Weatherdon Jan 25, 2005 
     # Added check for $oEnd == 0
-    if(($oEnd < $me->{endDate}) or ($oEnd == 0)){ 
-		$prnt->getEndDate($me->{endDate});
+    if(($oEnd < $self->endDate) or ($oEnd == 0)){
+		$parent->getEndDate($self->endDate);
 	}
 
     # Peter Weatherdon: Jan 19, 2005
     # Recursively call handleDates to support nested sub-projects
-    $prnt->_handleDates();  
+    $parent->_handleDates();
 }
 
-sub setParent {
-	my $me	= shift;
-	$me->{parent} = shift;
+sub setParent($self,$parent) {
+	$self->parent = $parent;
 }
 
-sub getNodeCount {
-	my $me	= shift;
-	return $me->{subNodes};
+sub getNodeCount($self) {
+	return $self->subNodes;
 }
 
-sub incrNodeCount {
-	my $me	= shift;
-	if(not $me->{parent}){
-		$me->{subNodes}++;
+sub incrNodeCount($self) {
+	if(not $self->parent){
+		$self->subNodes($self->subNodes+1);
 	}else{
-		$me->{parent}->incrNodeCount();
+		$self->parent->incrNodeCount();
 	}
 }
 
-sub getStartDate {
-	my $me	= shift;
-	my $val	= shift;
-	$me->{startDate} = $val if defined $val;
-	return $me->{startDate};
+sub getStartDate($self, $date = undef) {
+	$self->startDate($date) if defined $date;
+	return $self->startDate;
 }
 
-sub getEndDate {
-	my $me	= shift;
-	my $val	= shift;
-	$me->{endDate} = $val if defined $val;
-	return $me->{endDate};
+sub getEndDate($self, $date = undef) {
+	$self->endDate($date) if defined $date;
+	return $self->endDate;
 }
 
-sub getDescription {
-	my $me	= shift;
-	return $me->{description};
-}
-
-sub timeSpan {
-	my $me	= shift;
-	my $span= $me->{mode};
-	my $copyEnd	= Time::Piece->new($me->{endDate});
-	my $copyStr	= Time::Piece->new($me->{startDate});
+sub timeSpan($self) {
+	my $span= $self->mode;
+	my $copyEnd	= Time::Piece->new($self->endDate);
+	my $copyStr	= Time::Piece->new($self->startDate);
+	print STDERR "timeSpan $copyStr $copyEnd";
 	if($span eq 'days'){
 		return daysBetween($copyStr, $copyEnd);
 	}elsif($span eq 'months'){

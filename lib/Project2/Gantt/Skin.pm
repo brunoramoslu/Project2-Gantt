@@ -19,7 +19,7 @@ use Mojo::Base -base;
 use Imager::Font;
 
 has primaryText     => 'black';
-has secondaryText	=> '#969696';
+has secondaryText	=> '#363636';
 has primaryFill	    => '#c4dbed';
 has secondaryFill   => '#e5e5e5';
 has infoStroke      => 'black';

@@ -16,38 +16,33 @@
 ##########################################################################
 package Project2::Gantt::Task;
 
-use Mojo::Base -base;
+use Mojo::Base -base,-signatures;
 
 use Time::Piece;
 
 has parent => undef;
+
+#TODO: Review start/end conversion to date
+has start => undef;
+has end => undef;
+
 has startDate => undef;
 has endDate => undef;
 has description => undef;
 has color => undef;
+has resources => sub { [] };
 
-##########################################################################
-#
-#	Method:	new(%opts)
-#
-#	Purpose: Constructor. Takes as parameters the description of a
-#		task, its starting date, ending date, and a list of
-#		resources associated with its undertaking.
-#
-##########################################################################
 sub new {
-	my $class	= shift;
-	my %opts	= @_;
-	if(not $opts{description}){
+	my $self = shift->SUPER::new(@_);
+	if(not $self->description){
 		die "Task must have description!";
 	}
-	if(not($opts{start} and $opts{end})){
+	if(not($self->start and $self->end)){
 		die "Must provide task dates!";
 	}
-	$opts{startDate}= _makeDate($opts{start});
-	$opts{endDate}	= _makeDate($opts{end});
-	my $me = bless \%opts, $class;
-	return $me;
+	$self->startDate(_makeDate($self->start));
+	$self->endDate(_makeDate($self->end));
+	return $self;
 }
 
 ##########################################################################
@@ -61,14 +56,13 @@ sub new {
 #	NOTE:	Perhaps this should be moved to TextUtils?
 #
 ##########################################################################
-sub _makeDate {
-	my $dateStr	= shift;
+sub _makeDate($string) {
 	print STDERR "#"x80,"\n";
-	print STDERR "_makeDate dateStr=$dateStr\n";
+	print STDERR "_makeDate string=$string\n";
 	my $add		= "";
-	$add =	" 00:00:00" if($dateStr !~ /\:/);
+	$add =	" 00:00:00" if($string !~ /\:/);
 	print STDERR "_makeDate add=$add\n";
-	my $fulldate = $dateStr.$add;
+	my $fulldate = $string.$add;
 	print STDERR "_makeDate fulldate=$fulldate\n";
 	my $t = Time::Piece->strptime($fulldate,'%Y-%m-%d %H:%M:%S');
 	print STDERR "Time::Piece " . $t->strftime('%Y-%m-%d %H:%M:%S'), "\n";
@@ -76,17 +70,9 @@ sub _makeDate {
 	return $t;
 }
 
-sub addResource {
-	my $me	= shift;
-	my $res	= shift;
-	push @{$me->{resources}}, $res;
+sub addResource($self,$resource) {
+	push @{$self->resources}, $resource;
 }
-
-sub getResources {
-	my $me	= shift;
-	return $me->{resources};
-}
-
 
 ##########################################################################
 #
@@ -97,20 +83,19 @@ sub getResources {
 #		Does similar for end date.
 #
 ##########################################################################
-sub _handleDates {
-	my $me	= shift;
-	my $prnt= $me->{parent};
-	my $oStrt	= $prnt->getStartDate() || -1;
-	my $oEnd	= $prnt->getEndDate() || 0;
-	if(($oStrt > $me->{startDate}) or ($oStrt == -1)){
-		$prnt->getStartDate($me->{startDate});
+sub _handleDates($self) {
+	my $parent  = $self->parent;
+	my $oStrt	= $parent->startDate || -1;
+	my $oEnd	= $parent->endDate || 0;
+	if(($oStrt > $self->startDate) or ($oStrt == -1)){
+		$parent->getStartDate($self->startDate);
 	}
 
     # Peter Weatherdon added check for $oEnd == 0
-	if(($oEnd < $me->{endDate}) or ($oEnd == 0)) {
-		$prnt->getEndDate($me->{endDate});
+	if(($oEnd < $self->endDate) or ($oEnd == 0)) {
+		$parent->getEndDate($self->endDate);
 	}
-	$prnt->_handleDates();
+	$parent->_handleDates();
 }
 
 1;

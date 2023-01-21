@@ -20,24 +20,11 @@ use Mojo::Base -base,-signatures;
 
 use Project2::Gantt::TextUtils;
 
-##########################################################################
-#
-#	Method:	new(%opts)
-#
-#	Purpose: Constructor. Takes as parameters the canvas, skin and
-#		task object it will describe.
-#
-##########################################################################
-sub new {
-	my $cls	= shift;
-	my %ops	= @_;
-	die "Improper args to SpanInfo!" if(not($ops{canvas} and $ops{task}));
-	return bless {
-		canvas	=>	$ops{canvas},
-		skin	=>	$ops{skin},
-		task	=>	$ops{task},
-	}, $cls;
-}
+has canvas => undef;
+has task => undef;
+has skin => undef;
+
+use constant DESCRIPTION_SIZE => 145;
 
 ##########################################################################
 #
@@ -47,10 +34,8 @@ sub new {
 #		incase a preprocessing need arises later.
 #
 ##########################################################################
-sub display {
-	my $me	= shift;
-	my $hgt	= shift;
-	$me->_writeInfo($hgt);
+sub display($self,$height) {
+	$self->_writeInfo($height);
 }
 
 ##########################################################################
@@ -64,83 +49,60 @@ sub display {
 #		instance or a Project::Gantt::Task instance.
 #
 ##########################################################################
-sub _writeInfo($me, $height) {
-	my $tsk		= $me->{task};
-	my $bgcolor	= $me->{skin}->primaryFill;
-	my $fontFill	= $me->{skin}->primaryText;
-	my $canvas	= $me->{canvas};
-	$bgcolor = $me->{skin}->secondaryFill if $tsk->isa("Project2::Gantt");
-	$fontFill = $me->{skin}->secondaryText if $tsk->isa("Project2::Gantt");
-	# rectangle for description
-	# $canvas->Draw(
-	# 	stroke		=>	$me->{skin}->infoStroke(),
-	# 	fill		=>	$bgcolor,
-	# 	primitive	=>	'rectangle',
-	# 	points		=>	"0, $height 145, ".($height+17));
+sub _writeInfo($self, $height) {
+	my $task	 = $self->task;
+	my $bgcolor	 = $self->skin->primaryFill;
+	my $fontFill = $self->skin->primaryText;
+	my $canvas	 = $self->canvas;
+
+	$bgcolor     = $self->skin->secondaryFill if $task->isa("Project2::Gantt");
+	$fontFill    = $self->skin->secondaryText if $task->isa("Project2::Gantt");
+
 	$canvas->box(
-		color => 'red',
-		xmin => 0,
-		ymin => $height,
-		xmax => 145,
-		ymax => $height + 17
+		color  => $bgcolor,
+		xmin   => 0,
+		ymin   => $height,
+		xmax   => DESCRIPTION_SIZE,
+		ymax   => $height + 17,
+		filled => 1,
 	);
-	# rectangle for name
-	# $canvas->Draw(
-	# 	stroke		=>	$me->{skin}->infoStroke(),
-	# 	fill		=>	$bgcolor,
-	# 	primitive	=>	'rectangle',
-	# 	points		=>	"145, $height 200, ".($height+17));
+
 	$canvas->box(
-		color => 'green',
-		xmin => 145,
-		ymin => $height,
-		xmax => 200,
-		ymax => $height + 17
+		color  => $bgcolor,
+		xmin   => DESCRIPTION_SIZE,
+		ymin   => $height,
+		xmax   => 200,
+		ymax   => $height + 17,
+		filled => 1,
 	);
-	# write description
-	# $canvas->Annotate(
-	# 	text		=>	truncateStr(
-	# 		$tsk->getDescription(),
-	# 		145),
-	# 	font		=>	$me->{skin}->font(),
-	# 	fill		=>	$fontFill,
-	# 	pointsize	=>	10,
-	# 	x		=>	2,
-	# 	y		=>	$height+12);
-	#TODO: Load font from self/me
-	print STDERR truncateStr($tsk->description,145),"\n";
-	my $font = Imager::Font->new(file=>"Vera.ttf");
+
+	print STDERR truncate($task->description,DESCRIPTION_SIZE),"\n";
+
+	#my $color = $task->color // 'black';
+	my $color = $fontFill;
 	$canvas->string(
-		x => 2,
-		y => $height + 12,
-		string => truncateStr($tsk->description,145),
-		font => $font,
-		size => 10,
-		aa => 1,
-		color => 'black'
+		x      => 2,
+		y      => $height + 12,
+		string => truncate($task->description, DESCRIPTION_SIZE),
+		font   => $self->skin->font,
+		size   => 10,
+		aa     => 1,
+		color  => $color,
 	);
+
 	# if this is a task, write name... sub-projects aren't associated with
 	# a specific resource
-	if($tsk->isa("Project2::Gantt::Task")){
-		# $canvas->Annotate(
-		# 	text		=>	truncateStr(
-		# 		$tsk->getResources()->[0]->getName(),
-		# 		55),
-		# 	font		=>	$me->{skin}->font(),
-		# 	fill		=>	$fontFill,
-		# 	pointsize	=>	10,
-		# 	x		=>	147,
-		# 	y		=>	$height+12);
-		my $resource_name = truncateStr($tsk->getResources()->[0]->getName(),55);
-		print STDERR "_writeInfo resource_name=$resource_name\n";
+	if($task->isa("Project2::Gantt::Task")){
+		my $name = truncate($task->resources->[0]->name,55);
+		print STDERR "_writeInfo name=$name\n";
 		$canvas->string(
-			x => 147,
-			y => $height + 12,
-			string => truncateStr($resource_name,55),
-			font => $font,
-			size => 10,
-			aa => 1,
-			color => 'black'
+			x      => 147,
+			y      => $height + 12,
+			string => $name,
+			font   => $self->skin->font,
+			size   => 10,
+			aa     => 1,
+			color  => 'black',
 		);
 	}
 }

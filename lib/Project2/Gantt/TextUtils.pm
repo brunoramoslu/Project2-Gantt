@@ -15,15 +15,16 @@
 #
 ########################################################################## 
 package Project2::Gantt::TextUtils;
-use strict;
-use warnings;
+
+use Mojo::Base -strict,-signatures;
+
 use Exporter ();
 use vars qw[@EXPORT @ISA];
 
 @ISA	= qw[Exporter];
 
 @EXPORT	= qw[
-	truncateStr
+	truncate
 ];
 
 ##########################################################################
@@ -37,16 +38,16 @@ use vars qw[@EXPORT @ISA];
 #			a 10 pt font.
 #
 ##########################################################################
-sub truncateStr {
-	my @chars	= split //,shift;
-	my $pixels	= shift;
+sub truncate($string, $pixels) {
+	my @chars	= split //,$string;
+
 	# avg of 6 pixels per char
 	my $maxAllow	= int $pixels/6;
 
 	# chop off characters that won't fit into box
 	if(($#chars+1) > $maxAllow){
 		@chars	= @chars[0..($maxAllow-3)];
-		push @chars, ('. .');
+		push @chars, ('...');
 	}
 	return join('', @chars);
 }

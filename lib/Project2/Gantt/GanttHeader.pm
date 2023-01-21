@@ -17,32 +17,29 @@ package Project2::Gantt::GanttHeader;
 
 use Mojo::Base -base,-signatures;
 
-use Project2::Gantt::DateUtils qw[:round :lookup];
+use Project2::Gantt::DateUtils qw[:round];
 use Project2::Gantt::TextUtils;
 use Project2::Gantt::Globals;
+
 use Time::Seconds;
 
-##########################################################################
-#
-#	Method:	new(%opts)
-#
-#	Purpose: Constructor. Takes the following parameters: canvas,
-#		the root Project::Gantt object and the skin object.
-#
-##########################################################################
+has canvas    => undef;
+has title     => undef;
+has startDate => undef;
+has endDate   => undef;
+has skin      => undef;
+has beginX    => 205;
+has beginY    => 30;
+has root      => undef;
+
+use constant TITLE_SIZE => 200;
+
 sub new {
-	my $cls	= shift;
-	my %ops	= @_;
-	die "Improper construction of GanttHeader!" if(not($ops{canvas} and $ops{root}));
-	return bless {
-		canvas		=>	$ops{canvas},
-		title		=>	$ops{root}->getDescription(),
-		startDate	=>	Time::Piece->new($ops{root}->getStartDate()),
-		endDate		=>	$ops{root}->getEndDate(),
-		skin		=>	$ops{skin},
-		beginY		=>	30,
-		beginX		=>	205,
-	}, $cls;
+	my $self = shift->SUPER::new(@_);
+	$self->title($self->root->description);
+	$self->startDate(Time::Piece->new($self->root->startDate)) if not defined $self->startDate;
+	$self->endDate(Time::Piece->new($self->root->endDate)) if not defined $self->endDate;
+	return $self;
 }
 
 ##########################################################################
@@ -54,18 +51,16 @@ sub new {
 #		responsible for doing that is called.
 #
 ##########################################################################
-sub display {
-	my $me	= shift;
-	my $mode= shift;
+sub display($self, $mode= 'days') {
 	if($mode eq 'hours'){
-		$me->_writeHeaderHours();
+		$self->_writeHeaderHours();
 	}elsif($mode eq 'months'){
-		$me->_writeHeaderMonths();
+		$self->_writeHeaderMonths();
 	}else{
-		$me->_writeHeaderDays();
+		$self->_writeHeaderDays();
 	}
-	if($me->{skin}->doTitle()){
-		$me->_writeTitle();
+	if($self->skin->doTitle){
+		$self->_writeTitle();
 	}
 }
 
@@ -81,14 +76,16 @@ sub display {
 #		after each square if the skin calls for it.
 #
 ##########################################################################
-sub _writeHeaderDays {
-	my $me		= shift;
-	my $start	= $me->{startDate};
-	my $end		= $me->{endDate};
-	my @monthsWritn	= ();
-	my $yval	= $me->{beginY};
-	my $xval	= $me->{beginX};
+sub _writeHeaderDays($self) {
+	my $start	= $self->startDate;
+	my $end		= $self->endDate;
+	my $yval	= $self->beginY;
+	my $xval	= $self->beginX;
 	$start		= dayBegin($start);
+
+	say STDERR "xval=$xval yval=$yval";
+
+	my @monthsWritn	= ();
 
 	while($start <= $end){
 		print STDERR "_writeHeaderDays start=$start\n";
@@ -100,25 +97,27 @@ sub _writeHeaderDays {
 			# if more than 15 days left in month, write name of month above day listings
 			print STDERR "_writeHeaderDays \$start->month_last_day " .$start->month_last_day, "\n";
 			print STDERR "_writeHeaderDays \$start->mday " .$start->mday, "\n";
-			print STDERR "_writeHeaderDays ONE_DAY*15 " .ONE_DAY*15, "\n";
 			if((($start->month_last_day - $start->mday) >= 15) and (($end-$start)>=15)) {
-				$me->_writeText(
-					$start->fullmonth,
+				print STDERR "Write fullmonth ... $xval 12\n";
+				$self->_writeText(
+					$start->fullmonth . " " . $start->year,
 					$xval,
 					12);
 				$monthsWritn[$start->mon] = 1;
 			}
 		}
 		# write each day
-		$me->_writeRectangle(
+		$self->_writeRectangle(
 			$DAYSIZE,
 			$start->mday,
 			$xval,
-			$yval);
-		$me->_writeSwimLane($xval, $yval) if $me->{skin}->doSwimLanes();
+			$yval
+		);
+		$self->_writeSwimLane($xval, $yval) if $self->skin->doSwimLanes();
 		$start	+= ONE_DAY;
 		$xval	+= $DAYSIZE;
 	}
+	$self->_writeSwimLane($xval, $yval) if $self->skin->doSwimLanes();
 }
 
 ##########################################################################
@@ -131,13 +130,12 @@ sub _writeHeaderDays {
 #		installed after each month if the skin dictates.
 #
 ##########################################################################
-sub _writeHeaderMonths {
-	my $me		= shift;
-	my $start	= $me->{startDate};
-	my $end		= $me->{endDate};
+sub _writeHeaderMonths($self) {
+	my $start	= $self->startDate;
+	my $end		= $self->endDate;
 	my @yearsWritn	= ();
-	my $yval	= $me->{beginY};
-	my $xval	= $me->{beginX};
+	my $yval	= $self->beginY;
+	my $xval	= $self->beginX;
 	# transform start date to absolute beginning of month,
 	# so that $start+"1M" won't ever be bigger than $end
 	# before it should be
@@ -148,7 +146,7 @@ sub _writeHeaderMonths {
 		if((not $yearsWritn[$start->year]) and (($end->month-$start->month)>1)){
 			# if year has more than one month on chart, display year above months
 			if((getMonth($start->month) ne 'December') and (getMonth($end->month) ne 'January')){
-				$me->_writeText(
+				$self->_writeText(
 					$start->year,
 					$xval,
 					12);
@@ -156,12 +154,12 @@ sub _writeHeaderMonths {
 			}
 		}
 		# write each month
-		$me->_writeRectangle(
+		$self->_writeRectangle(
 			$MONTHSIZE,
 			getMonth($start->month),
 			$xval,
 			$yval);
-		$me->_writeSwimLane($xval, $yval) if $me->{skin}->doSwimLanes();
+		$self->_writeSwimLane($xval, $yval) if $self->skin->doSwimLanes();
 		$start	+= "1M";
 		$xval	+= $MONTHSIZE;
 	}
@@ -175,14 +173,13 @@ sub _writeHeaderMonths {
 #		of the chart, and optionally, a swimlane for each hour.
 #
 ##########################################################################
-sub _writeHeaderHours {
-	my $me		= shift;
-	my $start	= $me->{startDate};
-	my $end		= $me->{endDate};
-	my @daysWritn	= ();
-	my $yval	= $me->{beginY};
-	my $xval	= $me->{beginX};
-	$start		= hourBegin($start);
+sub _writeHeaderHours($self) {
+	my $start	  = $self->startDate;
+	my $end		  = $self->endDate;
+	my @daysWritn = ();
+	my $yval	  = $self->beginY;
+	my $xval	  = $self->beginX;
+	$start		  = hourBegin($start);
 
 	while($start <= $end){
 		print STDERR "_writeHeaderHours start=$start\n";
@@ -191,20 +188,20 @@ sub _writeHeaderHours {
 		if((not $daysWritn[$start->mday.$start->mon]) and (($end->hour-$start->hour)>5)){
 			# if day has more than 6 hours on chart, list day of week
 			if(($start->hour <= 18) and ($end->hour >= 6)){
-				$me->_writeText(
-					getDay($start->wday),
+				$self->_writeText(
+					$start->fullday,
 					$xval,
 					12);
 				$daysWritn[$start->mday.$start->mon] = 1;
 			}
 		}
 		# write each hour
-		$me->_writeRectangle(
+		$self->_writeRectangle(
 			$DAYSIZE,
 			$start->hour,
 			$xval,
 			$yval);
-		$me->_writeSwimLane($xval, $yval) if $me->{skin}->doSwimLanes();
+		$self->_writeSwimLane($xval, $yval) if $self->skin->doSwimLanes();
 		$start	+= ONE_HOUR;
 		$xval	+= $DAYSIZE;
 	}
@@ -218,48 +215,31 @@ sub _writeHeaderHours {
 #		square/rectangle representing each interval of time.
 #
 ##########################################################################
-sub _writeRectangle {
-	my $me		= shift;
-	my $width	= shift;
-	my $text	= shift;
-	my $xval	= shift;
-	my $yval	= shift;
+sub _writeRectangle($self, $width, $text, $xval, $yval) {
 	my $height	= 17;
 	my $oxval	= $xval + $width;
 	my $oyval	= $yval - $height;
-	my $canvas	= $me->{canvas};
+	my $canvas	= $self->canvas;
 	# draw box and inscribe text for a time unit above chart
-	# $canvas->Draw(
-	# 	fill		=>	$me->{skin}->secondaryFill(),
-	# 	stroke		=>	$me->{skin}->infoStroke(),
-	# 	primitive	=>	'rectangle',
-	# 	points		=>	"${xval}, $yval ${oxval}, $oyval");
+
+	print STDERR "_writeRectangle $xval $yval $oxval $oyval\n";
+
 	$canvas->box(
-		color => $me->{skin}->secondaryFill(),
-		xmin =>$xval,
-		ymin =>$yval,
-		xmax =>$oxval,
-		ymax =>$oyval
-	);
+		color => $self->skin->secondaryFill,
+		xmin  => $xval,
+		ymin  => $yval,
+		xmax  => $oxval,
+		ymax  => $oyval
+	) or print STDERR "ERROR: " . $canvas->errstr;
 
-	# $canvas->Annotate(
-	# 	text		=>	$text,
-	# 	font		=>	$me->{skin}->font(),
-	# 	fill		=>	$me->{skin}->primaryText(),
-	# 	pointsize	=>	10,
-	# 	x		=>	$xval + 2,
-	# 	y		=>	$yval - 5);
-
-	#TODO: Load font from self/me
-	my $font = Imager::Font->new(file=>"Vera.ttf");
 	$canvas->string(
-		x => $xval + 2,
-		y => $yval - 5,
+		x      => $xval + 2,
+		y      => $yval - 5,
 		string => $text,
-		font => $font,
-		size => 10,
-		aa => 1,
-		color => 'yellow'
+		font   => $self->skin->font,
+		size   => 10,
+		aa     => 1,
+		color  => 'black'
 	);
 }
 
@@ -272,26 +252,16 @@ sub _writeRectangle {
 #
 ##########################################################################
 sub _writeText($self, $text, $xval, $yval) {
-	my $canvas	= $self->{canvas};
-	# used to write name of month/day/year above time units
-	# $canvas->Annotate(
-	# 	text		=>	$text,
-	# 	font		=>	$me->{skin}->font(),
-	# 	fill		=>	$me->{skin}->primaryText(),
-	# 	pointsize	=>	10,
-	# 	x		=>	$xval,
-	# 	y		=>	$yval);
-	#TODO: Load font from self/me, and color
-	my $font = $self->{skin}->font;
-	$canvas->string(
+	print STDERR "_writeText $text, $xval, $yval\n";
+	$self->canvas->string(
 		x => $xval,
 		y => $yval,
 		string => $text,
-		font => $font,
+		font => $self->skin->font,
 		size => 10,
 		aa => 1,
-		color => 'black',
-	);
+		color => $self->skin->primaryText,
+	) or die "ERROR: " . $self->canvas->errstr;
 }
 
 ##########################################################################
@@ -305,7 +275,7 @@ sub _writeText($self, $text, $xval, $yval) {
 sub _writeTitle($self) {
 	my $xval = 1;
 	my $yval =  12;
-	my $title = truncateStr($self->{title},200);
+	my $title = truncate($self->title,TITLE_SIZE);
 	$self->_writeText($title, $xval, $yval);
 }
 
@@ -317,24 +287,21 @@ sub _writeTitle($self) {
 #		of time.
 #
 ##########################################################################
-sub _writeSwimLane {
-	my $me		= shift;
-	my $xval	= shift;
-	my $yval	= shift;
-	my $canvas	= $me->{canvas};
+sub _writeSwimLane($self, $xval, $yval) {
+	my $canvas	= $self->canvas;
 	my $endY	= $canvas->getheight - 3;
 	# $canvas->Draw(
 	# 	primitive	=>	'line',
-	# 	stroke		=>	$me->{skin}->secondaryFill(),
+	# 	stroke		=>	$self->{skin}->secondaryFill(),
 	# 	points		=>	"${xval}, ".($yval+1)." ${xval}, $endY");
 	$canvas->line(
-		color=>$me->{skin}->secondaryFill(),
-		x1 => $xval,
-		x2 => $xval,
-		y1 => $yval+1,
-		y2 => $endY,
-		aa => 1,
-		endp => 1
+		color =>$self->skin->secondaryFill,
+		x1    => $xval,
+		x2    => $xval,
+		y1    => $yval+1,
+		y2    => $endY,
+		aa    => 1,
+		endp  => 1
 	);
 }
 

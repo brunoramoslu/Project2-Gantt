@@ -19,28 +19,16 @@ use warnings;
 use Mojo::Base -base,-signatures;
 use Project2::Gantt::Globals;
 
-##########################################################################
-#
-#	Method:	new(%opts)
-#
-#	Purpose: Constructor. Takes as parameters the Task or Gantt object
-#		it is going to display, as well as the Class::Date object
-#		representing the beginning of the chart. In addition, the
-#		Image::Magick canvas is passed in, along with a skin object
-#		to customize the colors of this TimeSpan.
-#
-##########################################################################
+has task    => undef;
+has canvas  => undef;
+has skin    => undef;
+has beginX  => 205;
+has rootStr => undef;
+
 sub new {
-	my $cls	= shift;
-	my %ops	= @_;
-	die "Must provide proper args to TimeSpan!" if(not($ops{task} and $ops{rootStr}));
-	return bless {
-		task	=>	$ops{task},
-		rootStr	=>	$ops{rootStr},
-		canvas	=>	$ops{canvas},
-		skin	=>	$ops{skin},
-		beginX	=>	205,
-	}, $cls;
+	my $self = shift->SUPER::new(@_);
+	die "Must provide proper args to TimeSpan!" if not defined $self->task or not defined $self->rootStr;
+	return $self;
 }
 
 ##########################################################################
@@ -52,11 +40,8 @@ sub new {
 #		preprocessing is necessary at a later date.
 #
 ##########################################################################
-sub display {
-	my $me	= shift;
-	my $mod	= shift;
-	my $hgt	= shift;
-	$me->_writeBar($mod, $hgt);
+sub display($self, $mode, $height) {
+	$self->_writeBar($mode, $height);
 }
 
 ##########################################################################
@@ -72,15 +57,12 @@ sub display {
 #		instance.
 #
 ##########################################################################
-sub _writeBar {
-	my $me        = shift;
-	my $mode      = shift;
-	my $height    = shift;
-	my $tsk       = $me->{task};
-	my $rootStart = $me->{rootStr};
-	my $taskStart = $tsk->startDate;
-	my $taskEnd   = $tsk->endDate;
-	my $startX    = $me->{beginX};
+sub _writeBar($self, $mode, $height) {
+	my $task      = $self->task;
+	my $rootStart = $self->rootStr;
+	my $taskStart = $task->startDate;
+	my $taskEnd   = $task->endDate;
+	my $startX    = $self->beginX;
 	my $dif       = $taskStart-$rootStart;
 
 	# calculate starting X coordinate based on number of units away from start it is
@@ -88,7 +70,7 @@ sub _writeBar {
 		$startX += $dif->hours * $DAYSIZE;
 		$startX += (($rootStart->min / 59) * $DAYSIZE);
 	}elsif($mode eq 'months'){
-		$startX	+= $me->_getMonthPixels($rootStart->month_begin, $taskStart);
+		$startX	+= $self->_getMonthPixels($rootStart->month_begin, $taskStart);
 	}else{
 		$startX += $dif->days * $DAYSIZE;
 		$startX += (($rootStart->hour / 23) * $DAYSIZE);
@@ -105,7 +87,7 @@ sub _writeBar {
 		$endX	+= $edif->hours * $DAYSIZE;
 		$range	= $edif->hours;
 	}elsif($mode eq 'months'){
-		my $tmp	= $me->_getMonthPixels($taskStart, $taskEnd);
+		my $tmp	= $self->_getMonthPixels($taskStart, $taskEnd);
 		$endX	+= $tmp;
 		$range	= $tmp / $DAYSIZE;
 	}else{
@@ -116,8 +98,8 @@ sub _writeBar {
 		die "Incorrect date range!";
 	}
 	
-	$me->_drawSubProj($startX, $height, $endX, $range) if $tsk->isa("Project2::Gantt");
-	$me->_drawTask($startX, $height, $endX, $range, $tsk->color) if $tsk->isa("Project2::Gantt::Task");
+	$self->_drawSubProj($startX, $height, $endX, $range) if $task->isa("Project2::Gantt");
+	$self->_drawTask($startX, $height, $endX, $range, $task->color) if $task->isa("Project2::Gantt::Task");
 }
 
 ##########################################################################
@@ -133,10 +115,7 @@ sub _writeBar {
 #		number of seconds, minor miscalculations will occur.
 #
 ##########################################################################
-sub _getMonthPixels {
-	my $me		= shift;
-	my $birth	= shift;
-	my $death	= shift;
+sub _getMonthPixels($self, $birth, $death) {
 	my $pixelsPerYr	= 12 * 60;
 	my $secsInYear	= (((60*60)*24)*365);
 	my $secsInSpan	= ($death - $birth)->sec;
@@ -156,14 +135,18 @@ sub _getMonthPixels {
 #		if not, as a rectangle.
 #
 ##########################################################################
-sub _drawTask($me, $startX, $startY, $endX, $range, $color = undef) {
-	$color = $me->{skin}->itemFill if not defined $color;
-	my $canvas	= $me->{canvas};
-	my $leadY	= $startY+8.5;
-	my $bottom	= $startY+13.5;
+sub _drawTask($self, $startX, $startY, $endX, $range, $color = undef) {
+
+	$color = $self->{skin}->itemFill if not defined $color;
+
+	print STDERR "_drawTask $startX, $startY, $endX, $range, $color\n";
+
+	my $canvas	= $self->{canvas};
+	my $leadY	= $startY + 8.5;
+	my $bottom	= $startY + 13.5;
 	$startY		+= 3.5;
-	my $leadX	= $startX+7.5;
-	my $trailX	= $endX-7.5;
+	my $leadX	= $startX + 7.5;
+	my $trailX	= $endX - 7.5;
 	# if has space for full diamond
 	if($range >= 1){
 		# $canvas->Draw(
@@ -173,9 +156,8 @@ sub _drawTask($me, $startX, $startY, $endX, $range, $color = undef) {
 		# 	points		=>	"${startX}, $leadY ${leadX}, $bottom ${leadX}, $startY");
 		print STDERR "_drawTask polygon 1 [$startX,$leadX],[$leadX,$bottom],[$leadX,$startY]\n";
 		$canvas->polygon(
-			points =>[[$startX,$leadX],[$leadX,$bottom],[$leadX,$startY]],
-			color => 'red',
-			fill => { solid=>'#43acf2', combine => 'normal'});
+			points =>[[$startX,$leadY],[$leadX,$bottom],[$leadX,$startY]],
+			fill => { solid=> $color, combine => 'normal'});
 		# $canvas->Draw(
 		# 	fill		=>	$me->{skin}->itemFill(),
 		# 	stroke		=>	$me->{skin}->itemFill(),
@@ -185,7 +167,6 @@ sub _drawTask($me, $startX, $startY, $endX, $range, $color = undef) {
 
 		$canvas->polygon(
 			points =>[[$trailX,$bottom],[$trailX,$startY],[$endX,$leadY]],
-			color => 'red',
 			fill => { solid => $color, combine => 'normal' }
 		);
 		# if space between diamond edges, fill in
@@ -230,60 +211,59 @@ sub _drawTask($me, $startX, $startY, $endX, $range, $color = undef) {
 #		diamond, indicating a containment relationship.
 #
 ##########################################################################
-sub _drawSubProj {
-	my $me		= shift;
-	my $startX	= shift;
-	my $startY	= shift;
-	my $endX	= shift;
-	my $range	= shift;
-	my $canvas	= $me->{canvas};
-	my $edgeTop	= $startY+7;
-	my $edgeBot	= $startY+17;
-	my $innerBot	= $startY+10;
-	my $polyX	= $startX+7.5;
-	my $endPolyX	= $endX-7.5;
+sub _drawSubProj($self, $startX, $startY, $endX, $range) {
+	my $canvas   = $self->{canvas};
+	my $edgeTop  = $startY + 7;
+	my $edgeBot  = $startY + 17;
+	my $innerBot = $startY + 10;
+	my $polyX    = $startX + 7.5;
+	my $endPolyX = $endX   - 7.5;
+
+	say STDERR "_drawSubProj";
+
 	#if enough space for full bracket
 	if($range >= 1){
 		# $canvas->Draw(
-		# 	fill		=>	$me->{skin}->containerFill(),
-		# 	stroke		=>	$me->{skin}->containerStroke(),
+		# 	fill		=>	$self->{skin}->containerFill(),
+		# 	stroke		=>	$self->{skin}->containerStroke(),
 		# 	primitive	=>	'polygon',
 		# 	points		=>	"${startX}, $edgeBot ${startX}, $edgeTop ${polyX}, $startY ${polyX}, $innerBot");
 		print STDERR "_drawSubProj polygon 1 [$startX,$edgeBot],[$startX,$edgeTop],[$polyX,$startY],[$polyX,$innerBot]\n";
 		$canvas->polygon(
 			points =>[[$startX,$edgeBot],[$startX,$edgeTop],[$polyX,$startY],[$polyX,$innerBot]],
-			color => 'red',
-			fill => { solid=>'red', combine => 'normal'});
+			color => 'grey',
+			fill => { solid=>'grey', combine => 'normal'});
 		# $canvas->Draw(
-		# 	fill		=>	$me->{skin}->containerFill(),
-		# 	stroke		=>	$me->{skin}->containerStroke(),
+		# 	fill		=>	$self->{skin}->containerFill(),
+		# 	stroke		=>	$self->{skin}->containerStroke(),
 		# 	primitive	=>	'polygon',
 		# 	points		=>	"${endPolyX}, $innerBot ${endPolyX}, $startY ${endX}, $edgeTop ${endX}, $edgeBot");
 		print STDERR "_drawSubProj polygon 2 [$endPolyX,$innerBot],[$endPolyX,$startY],[$endX,$edgeTop],[$endX,$edgeBot]\n";
 		$canvas->polygon(
 			points =>[[$endPolyX,$innerBot],[$endPolyX,$startY],[$endX,$edgeTop],[$endX,$edgeBot]],
 			color => 'red',
-			fill => { solid=>'red', combine => 'normal'});
+			fill => { solid=>'grey', combine => 'normal'});
 		# if space between bracket ends, fill in
 		if($polyX != $endPolyX){
 			# $canvas->Draw(
-			# 	fill		=>	$me->{skin}->containerFill(),
-			# 	stroke		=>	$me->{skin}->containerStroke(),
+			# 	fill		=>	$self->{skin}->containerFill(),
+			# 	stroke		=>	$self->{skin}->containerStroke(),
 			# 	primitive	=>	'rectangle',
 			# 	points		=>	"${polyX}, $startY ${endPolyX}, $innerBot");
 			$canvas->box(
-				color => 'red',
-				xmin =>$polyX,
-				ymin =>$startY,
-				xmax =>$endPolyX,
-				ymax =>$innerBot
+				color  => 'grey',
+				xmin   => $polyX,
+				ymin   => $startY,
+				xmax   => $endPolyX,
+				ymax   => $innerBot,
+				filled => 1,
 			);
 		}
 	# not enough space for full bracket, use rectangle
 	}else{
 		# $canvas->Draw(
-		# 	fill		=>	$me->{skin}->containerFill(),
-		# 	stroke		=>	$me->{skin}->containerStroke(),
+		# 	fill		=>	$self->{skin}->containerFill(),
+		# 	stroke		=>	$self->{skin}->containerStroke(),
 		# 	primitive	=>	'rectangle',
 		# 	points		=>	"${startX}, $startY ${endX}, $edgeBot");
 		$canvas->box(
