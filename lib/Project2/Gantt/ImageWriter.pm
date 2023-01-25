@@ -1,34 +1,25 @@
-##########################################################################
-#
-#	File:	Project/Gantt/ImageWriter.pm
-#
-#	Author:	Alexander Westholm
-#
-#	Purpose: The ImageWriter object coordinates the visualization
-#		of scheduling data. It creates the canvas, and all
-#		supporting objects that write different aspects of the
-#		chart to the screen.
-#
-#	Client:	CPAN
-#
-#	CVS: $Id: ImageWriter.pm,v 1.14 2004/08/03 17:56:52 awestholm Exp $
-#
-##########################################################################
 package Project2::Gantt::ImageWriter;
 
 use Mojo::Base -base,-signatures;
 
 use Imager;
+
 use Project2::Gantt::DateUtils qw[:round];
 use Project2::Gantt::Globals;
 use Project2::Gantt::GanttHeader;
 use Project2::Gantt::TimeSpan;
 use Project2::Gantt::SpanInfo;
 
-has root => undef;
-has mode => 'days';
-has skin => undef;
+use Mojo::Log;
+
+has root   => undef;
+has mode   => 'days';
+has skin   => undef;
 has canvas => undef;
+has start  => undef;
+has end    => undef;
+
+has log    => sub { Mojo::Log->new };
 
 use constant SPAN_INFO_WIDTH => 205;
 use constant HEADER_HEIGHT   => 40;
@@ -40,103 +31,89 @@ sub new {
 	return $self;
 }
 
-##########################################################################
-#
-#	Method:	_getCanvas()
-#
-#	Purpose: This method examines the root node, and sets the width
-#		of the canvas based on the timespan covered by the chart,
-#		and sets the height based on how many schedule items
-#		constitute the chart.
-#
-##########################################################################
 sub _get_canvas($self) {
+	my $log    = $self->log;
+
 	my $width  = SPAN_INFO_WIDTH;
 	my $height = HEADER_HEIGHT;
 
-	print STDERR "_get_canvas getNodeCount=" . $self->root->getNodeCount(),"\n";
+	$log->debug("_get_canvas start=" . $self->start) if defined $self->start;
+	$log->debug("_get_canvas end="   . $self->end)   if defined $self->end;
+
+	my $node_count = $self->root->getNodeCount($self->start, $self->end);
+
+	$log->debug("_get_canvas getNodeCount=$node_count");
 
 	# add height for each row
-	$height += ROW_HEIGHT for (1..$self->root->getNodeCount());
+	$height += ROW_HEIGHT for (1..$node_count);
 
 	my $incr = $DAYSIZE;
 	$incr = $MONTHSIZE if $self->mode eq 'months';
 
 	# add width for each time unit
-	$width += $incr for (1..$self->root->timeSpan());
+	$width += $incr for (1..$self->root->timeSpan($self->start, $self->end));
 
 	my $canvas = Imager->new(xsize => $width, ysize => $height);
-	print STDERR "Size: " . $canvas->getwidth() . "x" . $canvas->getheight(),"\n";
+	$log->debug("Size: " . $canvas->getwidth() . "x" . $canvas->getheight());
 
 	$canvas->box(filled => 1, color => $self->skin->background);
 
 	$self->canvas($canvas);
 }
 
-##########################################################################
-#
-#	Method:	display(filename)
-#
-#	Purpose: Creates the Calendar header and draws it, then calls
-#		writeBars to draw in all tasks/subprojects. Finally,
-#		writes the image to a file.
-#
-##########################################################################
-sub display($self, $image) {
+sub display($self, $image, $start = undef, $end =  undef) {
+	my $log = $self->log;
 	my $header	= Project2::Gantt::GanttHeader->new(
-		canvas	=>	$self->canvas,
-		skin	=>	$self->skin,
-		root	=>	$self->root
+		canvas => $self->canvas,
+		skin   => $self->skin,
+		root   => $self->root,
+		log    => $log,
 	);
 
-	$header->display($self->mode);
+	$header->display($self->mode, $start, $end);
 
-    # PW added parameters, required by new writeBars with recursive support
-    $self->writeBars($self->root, 40);
+    $self->writeBars($self->root, 40, $start, $end);
+
 	$self->canvas->write(file => $image) or die $self->canvas->errstr;
 }
 
-##########################################################################
-#
-#	Method:	writeBars()
-#
-#	Purpose: Iterates over all tasks/subprojects contained by the root
-#		object, and creates SpanInfo and TimeSpan objects for each
-#		item, then draws them.
-#       
-#       Peter Weatherdon: Jan 19, 2005
-#           Modified this method to allow recursion for support of nested
-#           projects (more than 1 level deep)
-#
-##########################################################################
-sub writeBars($self, $project, $height) {
-	my $stDate  = $self->root->getStartDate();
-    my @tasks   = $project->getTasks();
-    my @projs   = $project->getSubProjs();
+sub writeBars($self, $project, $height, $start = undef, $end = undef) {
+	my $log     = $self->log;
+	my $stDate  = $start // $self->root->start;
+    my $tasks   = $project->tasks;
+    my $projs   = $project->subprojs;
+
+	$log->debug("="x60);
+	$log->debug("Project2::Gantt")       if $project->isa("Project2::Gantt");
+	$log->debug("Project2::Gantt::Task") if $project->isa("Project2::Gantt::Task");
+	$log->debug("writeBars height=$height");
 
 	# write tasks before sub-projects.. adjust height as we go
-	for my $task (@tasks,@projs){
+	for my $task ($tasks->@*,$projs->@*){
 		my $info= Project2::Gantt::SpanInfo->new(
-			canvas	=>	$self->canvas,
-			skin	=>	$self->skin,
-			task	=>	$task
+			canvas => $self->canvas,
+			skin   => $self->skin,
+			task   => $task,
+			log    => $log,
 		);
 		$info->display($height);
 		my $bar	= Project2::Gantt::TimeSpan->new(
-			canvas	=>	$self->canvas,
-			skin	=>	$self->skin,
-			task	=>	$task,
-			rootStr	=>	$stDate
+			canvas  => $self->canvas,
+			skin    => $self->skin,
+			task    => $task,
+			rootStr => $stDate,
+			log     => $log,
 		);
-		$bar->display($self->mode,$height);
+		$bar->display($self->mode,$height, $start, $end);
 		$height	+= 20;
 
         # if the task is a sub-project then draw recursively
 		if($task->isa("Project2::Gantt")){
-            $self->writeBars ($task, $height);
+			$log->debug("Calling writeBars for project " . $task->description);
+            $height = $self->writeBars ($task, $height, $start, $end);
 		}
 	}
+	return $height;
 }
-
 
 1;
