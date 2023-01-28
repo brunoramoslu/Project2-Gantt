@@ -36,3 +36,11 @@ inc/
 
 /local/
 /.idea/
+/*.iml
+/_Deparsed_XSubs.pm
+
+# plenv
+/.perl-version
+
+# dzil build folder
+/Project2-Gantt-*/
