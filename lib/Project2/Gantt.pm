@@ -1,5 +1,7 @@
 package Project2::Gantt;
 
+# ABSTRACT: Generate Gantt images
+
 use Mojo::Base -base,-signatures;
 
 use Project2::Gantt::Resource;
