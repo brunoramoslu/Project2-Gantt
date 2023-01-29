@@ -1,22 +1,8 @@
-##########################################################################
-#
-#	File:	Project/Gantt/Skin.pm
-#
-#	Author:	Alexander Westholm
-#
-#	Purpose: This object contains visualization preferences that can
-#		alter the look and feel of a chart. The default values
-#		create a fairly conservative blue/grey scheme.
-#
-#	Client:	CPAN
-#
-#	CVS: $Id: Skin.pm,v 1.4 2004/08/02 06:14:41 awestholm Exp $
-#
-##########################################################################
 package Project2::Gantt::Skin;
 
 use Mojo::Base -base;
 use Imager::Font;
+use Alien::Font::Vera;
 
 has primaryText     => 'black';
 has secondaryText	=> '#363636';
@@ -28,7 +14,7 @@ has containerStroke	=> 'black';
 has containerFill	=> 'grey';
 has itemFill        => 'blue';
 has background      => 'white';
-has font            => sub { Imager::Font->new(file => "Vera.ttf") }; #TODO: Fix me
+has font            => sub { Imager::Font->new(file => Alien::Font::Vera::path) };
 has doSwimLanes     => 1;
 
 1;

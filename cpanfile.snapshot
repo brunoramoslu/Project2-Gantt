@@ -1,11 +1,38 @@
 # carton snapshot format: version 1.0
 DISTRIBUTIONS
+  Alien-Font-Uni-0.3
+    pathname: L/LI/LICHTKIND/Alien-Font-Uni-0.3.tar.gz
+    provides:
+      Alien::Font::Uni 0.3
+    requirements:
+      ExtUtils::MakeMaker 0
+      File::ShareDir 1
+      File::ShareDir::Install 0.06
+      File::Spec 3
+      perl 5.008000
+  Alien-Font-Vera-0.013
+    pathname: B/BR/BRAMOS/Alien-Font-Vera-0.013.tar.gz
+    provides:
+      Alien::Font::Vera 0.013
+    requirements:
+      ExtUtils::MakeMaker 0
+      File::ShareDir::Install 0.06
   Canary-Stability-2013
     pathname: M/ML/MLEHMANN/Canary-Stability-2013.tar.gz
     provides:
       Canary::Stability 2013
     requirements:
       ExtUtils::MakeMaker 0
+  Class-Inspector-1.36
+    pathname: P/PL/PLICEASE/Class-Inspector-1.36.tar.gz
+    provides:
+      Class::Inspector 1.36
+      Class::Inspector::Functions 1.36
+    requirements:
+      ExtUtils::MakeMaker 0
+      File::Spec 0.80
+      base 0
+      perl 5.008
   Devel-Camelcadedb-v2021.2
     pathname: H/HU/HURRICUP/Devel-Camelcadedb-v2021.2.tar.gz
     provides:
@@ -22,6 +49,31 @@ DISTRIBUTIONS
       Scalar::Util 0
       Test::More 0
       perl 5.008
+  File-ShareDir-1.118
+    pathname: R/RE/REHSACK/File-ShareDir-1.118.tar.gz
+    provides:
+      File::ShareDir 1.118
+    requirements:
+      Carp 0
+      Class::Inspector 1.12
+      ExtUtils::MakeMaker 0
+      File::ShareDir::Install 0.13
+      File::Spec 0.80
+      perl 5.008001
+      warnings 0
+  File-ShareDir-Install-0.14
+    pathname: E/ET/ETHER/File-ShareDir-Install-0.14.tar.gz
+    provides:
+      File::ShareDir::Install 0.14
+    requirements:
+      Carp 0
+      Exporter 0
+      ExtUtils::MakeMaker 0
+      File::Spec 0
+      IO::Dir 0
+      perl 5.006
+      strict 0
+      warnings 0
   Hash-StoredIterator-0.008
     pathname: M/MS/MSCHWERN/Hash-StoredIterator-0.008.tar.gz
     provides:
