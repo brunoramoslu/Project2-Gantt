@@ -8,7 +8,7 @@ use Project2::Gantt::Skin;
 
 my $skin= Project2::Gantt::Skin->new(
     doTitle     => 1,
-    doSwimLanes => 1
+    doSwimLanes => 1,
 );
 
 my $day = Project2::Gantt->new(
