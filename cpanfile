@@ -1,8 +1,6 @@
-requires 'Alien::Font::Vera';
-requires 'Imager';
-requires 'Mojo::Base';
-requires 'Mojo::JSON';
-requires 'Mojo::Log';
+requires 'Alien::Font::Vera', '>= 0.013';
+requires 'Imager', '>= 1.019';
+requires 'Mojolicious', '>= 9.31';
 
 on 'develop' => sub {
     recommends 'Devel::Camelcadedb';
