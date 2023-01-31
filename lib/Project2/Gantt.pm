@@ -201,3 +201,72 @@ sub timeSpan($self, $start = undef, $end =  undef) {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Project2::Gant - Create Gantt charts
+
+=head1 SYNOPSIS
+
+    use Project2::Gantt;
+
+    my $gantt = Project2::Gantt->new(
+        file        =>      'gantt.png',
+        description =>      'My Project'
+	);
+
+	my $john = $gantt->addResource(name => 'John Doe');
+	my $jane = $gantt->addResource(name => 'Jane Doe');
+
+    $gantt->addTask(
+        description => 'Development',
+        resource    => $john,
+        start       => '2023-01-13',
+        end         => '2023-01-20'
+    );
+
+    $gantt->addTask(
+        description => 'Testing',
+        resource    => $jane,
+        start       => '2023-01-23',
+        end         => '2023-01-26'
+    );
+
+    $gantt->addTask(
+        description => 'Deployment',
+        resource    => $jane,
+        start       => '2023-02-03',
+        end         => '2023-02-03'
+    );
+
+    $gantt->display();
+
+=head1 DESCRIPTION
+
+This module allows you to easily create Gantt charts.
+
+You can specify the C<font> or simple install L<Alien::Font::Vera>
+as a fallback batteries included font.
+
+=head1 CAVEATS
+
+You can generate images in all formats supported by L<Imager>.
+
+=head1 AUTHOR
+
+Bruno Ramos <bramos@cpan.org>
+
+=head1 ACKNOWLEDGEMENTS
+
+This module is inspired by L<Project::Gantt> from Alexander Christian Westholm.
+
+=head1 COPYRIGHT
+
+Copyright(c) 2023 by Bruno Ramos
+
+=head1 LICENSE
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
