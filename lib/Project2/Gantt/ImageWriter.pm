@@ -13,7 +13,7 @@ use Project2::Gantt::SpanInfo;
 use Mojo::Log;
 
 # DATE
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
 has root   => undef;
 has mode   => 'days';

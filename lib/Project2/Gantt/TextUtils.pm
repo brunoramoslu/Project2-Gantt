@@ -6,7 +6,7 @@ use Exporter ();
 use vars qw[@EXPORT @ISA];
 
 # DATE
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
 @ISA	= qw[Exporter];
 

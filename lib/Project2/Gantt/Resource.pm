@@ -3,7 +3,7 @@ package Project2::Gantt::Resource;
 use Mojo::Base -base,-signatures;
 
 # DATE
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
 has name => undef;
 

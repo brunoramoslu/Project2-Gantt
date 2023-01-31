@@ -13,7 +13,7 @@ use Project2::Gantt::Skin;
 use Mojo::Log;
 
 # DATE
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
 has root        => undef;
 has skin        => sub { Project2::Gantt::Skin->new };
