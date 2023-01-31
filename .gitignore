@@ -34,7 +34,6 @@ inc/
 /pm_to_blib
 /*.zip
 
-/local/
 /.idea/
 /*.iml
 /_Deparsed_XSubs.pm
@@ -44,3 +43,10 @@ inc/
 
 # dzil build folder
 /Project2-Gantt-*/
+
+# Dist-Zilla
+/Projec2-Gantt-*/
+/Project2Gantt-*.tar.gz
+
+# carton
+/local/
