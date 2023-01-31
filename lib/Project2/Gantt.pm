@@ -66,10 +66,10 @@ sub addSubProject($self, %opts) {
 	return $prj;
 }
 
-sub display($self, $start =  undef, $end =  undef) {
+sub write($self, $start =  undef, $end =  undef) {
 	my $log = $self->log;
 	if($self->parent){
-		die "Must not call display on sub-project!";
+		die "Must not call write on sub-project!";
 	}
 	my $writer = Project2::Gantt::ImageWriter->new(
 		root  => $self,
@@ -79,10 +79,10 @@ sub display($self, $start =  undef, $end =  undef) {
 		end   => $end,
 		log   => $log,
 	);
-	$writer->display($self->file, $start, $end);
+	$writer->write($self->file, $start, $end);
 }
 
-sub _display($self) {
+sub _write($self) {
 	my $start	= $self->start;
 	my $end		= $self->end;
 	if($self->parent){
@@ -101,7 +101,7 @@ sub _display($self) {
 	}
 
 	for my $sub (@{$self->subprojs}){
-		$sub->display();
+		$sub->write();
 	}
 }
 
@@ -212,36 +212,43 @@ Project2::Gant - Create Gantt charts
 
     use Project2::Gantt;
 
-    my $gantt = Project2::Gantt->new(
-        file        =>      'gantt.png',
-        description =>      'My Project'
+		my $gantt = Project2::Gantt->new(
+		file        =>      'gantt.png',
+		description =>      'My Project'
 	);
 
 	my $john = $gantt->addResource(name => 'John Doe');
 	my $jane = $gantt->addResource(name => 'Jane Doe');
 
-    $gantt->addTask(
-        description => 'Development',
-        resource    => $john,
-        start       => '2023-01-13',
-        end         => '2023-01-20'
-    );
+	$gantt->addTask(
+		description => 'Analysis',
+		resource    => $john,
+		start       => '2023-01-06',
+		end         => '2023-01-10'
+	);
 
-    $gantt->addTask(
-        description => 'Testing',
-        resource    => $jane,
-        start       => '2023-01-23',
-        end         => '2023-01-26'
-    );
+	$gantt->addTask(
+		description => 'Development',
+		resource    => $john,
+		start       => '2023-01-13',
+		end         => '2023-01-20'
+	);
 
-    $gantt->addTask(
-        description => 'Deployment',
-        resource    => $jane,
-        start       => '2023-02-03',
-        end         => '2023-02-03'
-    );
+	$gantt->addTask(
+		description => 'Testing',
+		resource    => $jane,
+		start       => '2023-01-23',
+		end         => '2023-01-31'
+	);
 
-    $gantt->display();
+	$gantt->addTask(
+		description => 'Deployment',
+		resource    => $jane,
+		start       => '2023-02-07',
+		end         => '2023-02-07'
+	);
+
+	$gantt->write();
 
 =head1 DESCRIPTION
 

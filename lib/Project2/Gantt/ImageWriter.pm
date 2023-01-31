@@ -64,7 +64,7 @@ sub _get_canvas($self) {
 	$self->canvas($canvas);
 }
 
-sub display($self, $image, $start = undef, $end =  undef) {
+sub write($self, $image, $start = undef, $end =  undef) {
 	my $log = $self->log;
 	my $header	= Project2::Gantt::GanttHeader->new(
 		canvas => $self->canvas,
@@ -73,7 +73,7 @@ sub display($self, $image, $start = undef, $end =  undef) {
 		log    => $log,
 	);
 
-	$header->display($self->mode, $start, $end);
+	$header->write($self->mode, $start, $end);
 
     $self->writeBars($self->root, 40, $start, $end);
 
@@ -99,7 +99,7 @@ sub writeBars($self, $project, $height, $start = undef, $end = undef) {
 			task   => $task,
 			log    => $log,
 		);
-		$info->display($height);
+		$info->write($height);
 		my $bar	= Project2::Gantt::TimeSpan->new(
 			canvas  => $self->canvas,
 			skin    => $self->skin,
@@ -107,7 +107,7 @@ sub writeBars($self, $project, $height, $start = undef, $end = undef) {
 			rootStr => $stDate,
 			log     => $log,
 		);
-		$bar->display($self->mode,$height, $start, $end);
+		$bar->write($self->mode,$height, $start, $end);
 		$height	+= 20;
 
         # if the task is a sub-project then draw recursively

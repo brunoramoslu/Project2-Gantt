@@ -123,6 +123,6 @@ $sub_project->addTask(
 #d63031 red
 #a75eeb purple
 
-$gantt->display();
+$gantt->write();
 
-$project->display();
+$project->write();

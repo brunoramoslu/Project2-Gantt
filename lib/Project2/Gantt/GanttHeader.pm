@@ -34,7 +34,7 @@ sub new {
 	return $self;
 }
 
-sub display($self, $mode = 'days', $start = undef, $end = undef) {
+sub write($self, $mode = 'days', $start = undef, $end = undef) {
 	if($mode eq 'hours'){
 		$self->_writeHeaderHours($start, $end);
 	}elsif($mode eq 'months'){

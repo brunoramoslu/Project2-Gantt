@@ -17,7 +17,7 @@ has log    => sub { Mojo::Log->new };
 
 use constant DESCRIPTION_SIZE => 145;
 
-sub display($self,$height) {
+sub write($self,$height) {
 	$self->_writeInfo($height);
 }
 

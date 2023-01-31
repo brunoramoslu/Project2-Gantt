@@ -62,4 +62,4 @@ $day->addTask(
 #     start           =>      '2004-07-21 17:00:00',
 #     end             =>      '2004-07-21 20:30:00');
 
-$day->display();
+$day->write();
