@@ -4,6 +4,9 @@ use Mojo::Base -base,-signatures;
 
 use Time::Piece;
 
+# DATE
+our $VERSION = '0.001';
+
 has parent      => undef;
 has start       => sub { _makeDate(shift) };
 has end         => sub { _makeDate(shift) };

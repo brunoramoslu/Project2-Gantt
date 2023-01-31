@@ -1,19 +1,12 @@
-##########################################################################
-#
-#	File:	Project/Gantt/Globals.pm
-#
-#	Author:	Alexander Westholm
-#
-#	Purpose: A collection of globals used through the Gantt chart
-#		module. Currently only has pixel sizes for days/hours
-#		and months.
-#
-##########################################################################
 package Project2::Gantt::Globals;
 use strict;
 use warnings;
+
 use Exporter ();
 use vars qw[$DAYSIZE $MONTHSIZE @ISA @EXPORT];
+
+# DATE
+our $VERSION = '0.001';
 
 @ISA		= qw[Exporter];
 

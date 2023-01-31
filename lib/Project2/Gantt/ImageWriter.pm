@@ -12,6 +12,9 @@ use Project2::Gantt::SpanInfo;
 
 use Mojo::Log;
 
+# DATE
+our $VERSION = '0.001';
+
 has root   => undef;
 has mode   => 'days';
 has skin   => undef;

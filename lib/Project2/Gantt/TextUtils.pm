@@ -1,25 +1,12 @@
-##########################################################################
-#
-#	File:	Project/Gantt/TextUtils.pm
-#
-#	Author:	Alexander Westholm
-#
-#	Purpose: Currently contains only one function, which truncates
-#		a string to properly fit within a certain number of
-#		pixels. In the future, may contain more miscellaneous
-#		text manipulation routines.
-#
-#	Client:	CPAN
-#
-#	CVS: $Id: TextUtils.pm,v 1.3 2004/08/03 17:56:52 awestholm Exp $
-#
-########################################################################## 
 package Project2::Gantt::TextUtils;
 
 use Mojo::Base -strict,-signatures;
 
 use Exporter ();
 use vars qw[@EXPORT @ISA];
+
+# DATE
+our $VERSION = '0.001';
 
 @ISA	= qw[Exporter];
 

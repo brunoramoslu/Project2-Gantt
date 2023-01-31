@@ -4,6 +4,9 @@ use Mojo::Base -base;
 use Imager::Font;
 use Alien::Font::Vera;
 
+# DATE
+our $VERSION = '0.001';
+
 has primaryText     => 'black';
 has secondaryText	=> '#363636';
 has primaryFill	    => '#c4dbed';
