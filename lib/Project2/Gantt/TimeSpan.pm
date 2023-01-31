@@ -23,7 +23,7 @@ sub new {
 	return $self;
 }
 
-sub display($self, $mode, $height, $start = undef, $end =  undef) {
+sub write($self, $mode, $height, $start = undef, $end =  undef) {
 	$self->_writeBar($mode, $height, $start, $end);
 }
 
