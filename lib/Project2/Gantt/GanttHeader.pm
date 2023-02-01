@@ -158,10 +158,10 @@ sub _writeHeaderMonths($self) {
 	}
 }
 
-sub _writeHeaderHours($self) {
+sub _writeHeaderHours($self, $start_hour =  undef, $end_hour =  undef) {
 	my $log       = $self->log;
-	my $start	  = $self->start;
-	my $end		  = $self->end;
+	my $start	  = $start_hour // $self->start;
+	my $end		  = $end_hour   // $self->end;
 	my @daysWritn = ();
 	my $yval	  = $self->beginY;
 	my $xval	  = $self->beginX;
