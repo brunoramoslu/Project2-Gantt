@@ -6,15 +6,8 @@ use warnings;
 use Project2::Gantt;
 use Project2::Gantt::Skin;
 
-my $skin= Project2::Gantt::Skin->new(
-    doTitle     => 1,
-    doSwimLanes => 1,
-);
-
 my $day = Project2::Gantt->new(
     file            =>      'hourly.png',
-    skin            =>      $skin,
-    mode            =>      'days',
     description     =>      'Project-XXXXX Demo Project');
 
 my $john = $day->addResource(name => 'John');
@@ -62,4 +55,4 @@ $day->addTask(
 #     start           =>      '2004-07-21 17:00:00',
 #     end             =>      '2004-07-21 20:30:00');
 
-$day->write();
+$day->write;
