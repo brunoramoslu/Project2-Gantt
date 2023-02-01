@@ -7,7 +7,7 @@ use Project2::Gantt::Globals;
 use Mojo::Log;
 
 # DATE
-our $VERSION = '0.003';
+our $VERSION = '0.004';
 
 has task    => undef;
 has canvas  => undef;
