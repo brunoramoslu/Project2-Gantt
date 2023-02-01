@@ -15,9 +15,15 @@ has infoStroke      => 'black';
 has doTitle         => 1;
 has containerStroke	=> 'black';
 has containerFill	=> 'grey';
-has itemFill        => 'blue';
+has itemFill        => '2ab1aa';
 has background      => 'white';
 has font            => sub { Imager::Font->new(file => Alien::Font::Vera::path) };
 has doSwimLanes     => 1;
+
+#26ccbb green
+#43acf2 blue
+#fd9742 orange
+#d63031 red
+#a75eeb purple
 
 1;
