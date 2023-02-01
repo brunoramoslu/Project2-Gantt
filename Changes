@@ -1,14 +1,11 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+    - Fix Changes format
 
 0.002     2023-02-01 17:05:26 CET (TRIAL RELEASE)
-
-0.002   2023-02-01 Bruno Ramos
---------
     - Fix hours mode
     - Small improvements
 
-0.001   2023-01-29 Bruno Ramos
---------
+0.001     2023-01-29 12:55:56 CET (TRIAL RELEASE)
     - Initial release
