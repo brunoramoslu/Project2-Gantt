@@ -29,7 +29,7 @@ has subNodes    => 0;
 has start       => undef;
 has end         => undef;
 
-has log         => sub { Mojo::Log->new };
+has log         => sub { Mojo::Log->new(level=>'info') };
 
 sub addResource($self,%opts) {
 	my $resource = Project2::Gantt::Resource->new(%opts);
