@@ -91,15 +91,26 @@ $gantt->addTask(
     end         => '2023-01-18 18:30:00',
 );
 
-my $got = [ map { $_->description } $gantt->tasks->@*];
+my $got = [
+    map { $_->description } $gantt->tasks->@*
+];
 
-my $expected = ['Sleep', 'Shower', 'Breakfast', 'Drive to work', 'Work', 'Lunch', 'Work', 'Drive home'];
+my $expected = [
+    'Sleep',
+    'Shower',
+    'Breakfast',
+    'Drive to work',
+    'Work',
+    'Lunch',
+    'Work',
+    'Drive home'
+];
 
 is_deeply($got,$expected, "Tasks descriptions");
 
 $gantt->write;
 
-$dir->has(FILE, 'write gantt (hours)');
+$dir->has(FILE, 'Write gantt (hours)');
 
 $dir->remove_files(FILE);
 
