@@ -6,7 +6,7 @@ use Exporter ();
 use vars qw[$DAYSIZE $MONTHSIZE @ISA @EXPORT];
 
 # DATE
-our $VERSION = '0.005';
+our $VERSION = '0.006';
 
 @ISA		= qw[Exporter];
 

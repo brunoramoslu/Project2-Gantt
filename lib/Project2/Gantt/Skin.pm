@@ -5,7 +5,7 @@ use Imager::Font;
 use Alien::Font::Vera;
 
 # DATE
-our $VERSION = '0.005';
+our $VERSION = '0.006';
 
 has primaryText     => 'black';
 has secondaryText	=> '#363636';
