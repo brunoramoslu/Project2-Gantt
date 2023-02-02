@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+    - Fix undef warning in debug log in sub project loop
 
 0.005     2023-02-02 15:10:50 CET
     - Fix Changes management when releasing new version

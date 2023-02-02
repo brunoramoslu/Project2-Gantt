@@ -142,7 +142,8 @@ sub getNodeCount($self, $start = undef, $end = undef) {
 	$count++ if $keep_tasks;
 
 	for my $subproj ( $self->subprojs->@* ) {
-		$log->debug("getNodeCount subproj " . $subproj->start . " " . $subproj->end);
+		$log->debug("getNodeCount subproj start =" . $subproj->start) if defined $subproj->start;
+		$log->debug("getNodeCount subproj end   =" . $subproj->end)   if defined $subproj->end;
 		if ( defined $start and $subproj->end < $start ) {
 			$log->debug("getNodeCount skip subproj s");
 			next;
