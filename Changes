@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.006     2023-02-02 16:06:40 CET
     - Fix undef warning in debug log in sub project loop
 
 0.005     2023-02-02 15:10:50 CET
