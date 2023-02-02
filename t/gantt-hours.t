@@ -2,13 +2,25 @@
 use strict;
 use warnings;
 use Test::More;
+use Test::Directory;
 
 use Project2::Gantt;
+
+use constant FILE => 'gantt-hours.png';
+
+my $dir = Test::Directory->new;
+
+my $path = $dir->path(FILE);
+
+use Data::Dumper;
+
+diag Dumper $dir;
+diag Dumper $path;
 
 my $gantt = Project2::Gantt->new(
     description => 'Normal day',
     mode        => 'hours',
-    file        => 'gantt-hours.png',
+    file        => $path,
 );
 
 isa_ok($gantt, 'Project2::Gantt', 'Project2::Gantt->new');
@@ -79,6 +91,16 @@ $gantt->addTask(
     end         => '2023-01-18 18:30:00',
 );
 
+my $got = [ map { $_->description } $gantt->tasks->@*];
+
+my $expected = ['Sleep', 'Shower', 'Breakfast', 'Drive to work', 'Work', 'Lunch', 'Work', 'Drive home'];
+
+is_deeply($got,$expected, "Tasks descriptions");
+
 $gantt->write;
+
+$dir->has(FILE, 'write gantt (hours)');
+
+$dir->remove_files(FILE);
 
 done_testing;
