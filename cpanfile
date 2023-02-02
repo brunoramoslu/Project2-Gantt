@@ -5,3 +5,8 @@ requires 'Mojolicious', '>= 9.31';
 on 'develop' => sub {
     recommends 'Devel::Camelcadedb';
 };
+
+on 'test' => sub {
+    requires 'Test::More';
+    requires 'Test::Directory';
+}
