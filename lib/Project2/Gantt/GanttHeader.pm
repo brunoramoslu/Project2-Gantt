@@ -11,7 +11,7 @@ use Time::Seconds;
 use Mojo::Log;
 
 # DATE
-our $VERSION = '0.008';
+our $VERSION = '0.009';
 
 has canvas => undef;
 has title  => undef;
