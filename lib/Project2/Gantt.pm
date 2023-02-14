@@ -211,7 +211,7 @@ Project2::Gant - Create Gantt charts
 
 =head1 SYNOPSIS
 
-    use Project2::Gantt;
+	use Project2::Gantt;
 
 		my $gantt = Project2::Gantt->new(
 		file        =>      'gantt.png',
