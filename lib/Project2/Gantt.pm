@@ -262,6 +262,10 @@ as a fallback batteries included font.
 
 You can generate images in all formats supported by L<Imager>.
 
+If you don't have, or don't want to install a TTF font,
+you can just install the L<Alien::Font::Vera> package
+and everything will work "automatically".
+
 =head1 AUTHOR
 
 Bruno Ramos <bramos@cpan.org>
