@@ -19,6 +19,11 @@ has itemFill        => '2ab1aa';
 has background      => 'white';
 has font            => sub { Imager::Font->new(file => Alien::Font::Vera::path) };
 has doSwimLanes     => 1;
+has spanInfoWidth   => 205;
+has titleSize       => 200;
+has descriptionSize => 145;
+has resourceStartX  => 145 + 2;
+has resourceSize    => 55;
 
 #26ccbb green
 #43acf2 blue

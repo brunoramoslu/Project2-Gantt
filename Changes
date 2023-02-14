@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+    - Add Small, Medium and Large skins
 
 0.006     2023-02-02 16:06:40 CET
     - Fix undef warning in debug log in sub project loop
