@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.008     2023-02-14 23:57:52 CET
     - Depend on Perl 5.020
     - Add File::Find::Rule test dependency
     - Indent pod code with spaces in Gantt.pm
