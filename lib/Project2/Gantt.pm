@@ -255,16 +255,16 @@ Project2::Gant - Create Gantt charts
 
 This module allows you to easily create Gantt charts.
 
-You can specify the C<font> or simple install L<Alien::Font::Vera>
-as a fallback batteries included font.
+You can specify the C<font> you want but a dependency on L<Alien::Font::Vera>
+is included to have a fallback batteries included font available.
 
 =head1 CAVEATS
 
 You can generate images in all formats supported by L<Imager>.
 
 If you don't have, or don't want to install a TTF font,
-you can just install the L<Alien::Font::Vera> package
-and everything will work "automatically".
+you can use the one provided by L<Alien::Font::Vera> package
+and everything will just work.
 
 =head1 AUTHOR
 
