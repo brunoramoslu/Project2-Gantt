@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+    - Depend on Alien::Font::Vera and update doc to reflect that
 
 0.008     2023-02-14 23:57:52 CET
     - Depend on Perl 5.020
