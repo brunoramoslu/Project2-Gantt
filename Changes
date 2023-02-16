@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.009     2023-02-16 10:41:11 CET
     - Depend on Alien::Font::Vera and update doc to reflect that
 
 0.008     2023-02-14 23:57:52 CET
