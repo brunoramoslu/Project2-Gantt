@@ -22,6 +22,9 @@ use Mojo::Base -strict,-signatures;
 use Exporter ();
 use vars qw[@EXPORT_OK %EXPORT_TAGS @ISA];
 
+# DATE
+our $VERSION = '0.010';
+
 @ISA = qw[Exporter];
 
 @EXPORT_OK = qw[
