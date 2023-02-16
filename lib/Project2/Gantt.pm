@@ -214,8 +214,8 @@ Project2::Gant - Create Gantt charts
   use Project2::Gantt;
 
   my $gantt = Project2::Gantt->new(
-    file        =>      'gantt.png',
-    description =>      'My Project'
+    file        => 'gantt.png',
+    description => 'My Project'
   );
 
   my $john = $gantt->addResource(name => 'John Doe');
