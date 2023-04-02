@@ -11,6 +11,7 @@ use Project2::Gantt::DateUtils qw[:compare];
 use Project2::Gantt::Skin;
 
 use Mojo::Log;
+use version;
 
 # DATE
 our $VERSION = '0.010';
@@ -184,11 +185,18 @@ sub incrNodeCount($self) {
 	}
 }
 
+# Workaround a bug in Time::Piece before 1.3203: copy constructor
+# changes the original time depending on the timezone.
+my $time_piece_copy
+    = (version->parse($Time::Piece::VERSION) >= version->parse('1.3203'))
+    ? sub { Time::Piece->new(shift) }
+    : sub { Time::Piece->strptime(shift->epoch, '%s') };
+
 sub timeSpan($self, $start = undef, $end =  undef) {
 	my $log     = $self->log;
 	my $span    = $self->mode;
-	my $copyStr	= $start // Time::Piece->new($self->start);
-	my $copyEnd	= $end   // Time::Piece->new($self->end);
+	my $copyStr	= $start // $time_piece_copy->($self->start);
+	my $copyEnd	= $end   // $time_piece_copy->($self->end);
 	$log->debug("timeSpan $copyStr $copyEnd");
 	if ( $span eq 'days') {
 		return daysBetween($copyStr, $copyEnd, $log);
