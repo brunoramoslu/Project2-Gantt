@@ -3,7 +3,7 @@ package Project2::Gantt::Skin::Medium;
 use Mojo::Base 'Project2::Gantt::Skin';
 
 # DATE
-our $VERSION = '0.010';
+our $VERSION = '0.011';
 
 has spanInfoWidth   => 205 + 100;
 has titleSize       => 200 + 100;

@@ -3,7 +3,7 @@ package Project2::Gantt::Skin::Small;
 use Mojo::Base 'Project2::Gantt::Skin';
 
 # DATE
-our $VERSION = '0.010';
+our $VERSION = '0.011';
 
 # use all defaults
 
