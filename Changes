@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.011     2024-02-05 18:50:42 CET
     - Update test to not use postderef
 
 0.010     2024-02-04 18:51:14 CET
