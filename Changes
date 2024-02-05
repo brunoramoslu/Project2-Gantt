@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+    - Update test to not use postderef
 
 0.010     2024-02-04 18:51:14 CET
     - Force requires on specific version of Time::Piece to fix an issue
